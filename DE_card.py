@@ -3,12 +3,12 @@ import cx_Oracle
 import pandas as pd
 import easygui
 
-ip = '79.164.32.101'
+ip = ''
 port = 1522
 service_name = 'ORCL'
 dsn = cx_Oracle.makedsn(ip, port, service_name=service_name)
-user='student_karpov'
-password= 'student_karpov'
+user=''
+password= ''
 
 con = cx_Oracle.connect(user, password, dsn)
 
