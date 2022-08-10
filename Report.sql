@@ -11,7 +11,7 @@ using index transaction_pk_idx novalidate;
 
 -- строит отчет с мошеннические транзакциями обоих типов
 -- в первой части транзаекции совершенные в разных городах в течении дня
--- для примера выбран промежуток между 2018-01-01 и 2018-01-02
+-- для примера выбран промежуток между 2018-01-01 и 2018-01-02.
 WITH t  AS (
 SELECT /*+ PARALLEL (8) */ TRANSACTION_time, CARD, users, merchant_city FROM TRANSACTIONS
 WHERE merchant_city != 'ONLINE'
@@ -32,5 +32,5 @@ SELECT /*+ PARALLEL (8) */  MAX(TRANSACTION_TIME) AS FRAUD_DT, t.USERS AS Client
 FROM  t
 JOIN CARDS c ON t.USERs=c.Users AND  t.card=c.CARD_INDEX 
 WHERE TRANSACTION_time>expires
-GROUP BY t.USERS
+GROUP BY t.USERS;
 

@@ -1,4 +1,4 @@
--- если записей нет то добавит запись "01.01.1800 00:00:00"
+-- если записей нет то добавит апись "01.01.1800 00:00:00"
 insert into meta_increment
 select to_timestamp('01.01.1800 00:00:00', 'dd/mm/yyyy HH24:MI:SS')
 from dual
@@ -69,7 +69,6 @@ update meta_increment set max_date = (
 --Очистка таблицы
 TRUNCATE TABLE STG_TRANSACTION;
 
-SELECT * FROM meta_increment
 
 
 

@@ -1,18 +1,18 @@
-DROP TABLE TRANSACTIONS
+DROP TABLE TRANSACTIONS;
 
-DROP TABLE TRANSACTION_HIST
+DROP TABLE TRANSACTION_HIST;
 
-DROP TABLE TRANSACTIONS_BAD
+DROP TABLE TRANSACTIONS_BAD;
 
-DROP TABLE STG_TRANSACTION
+DROP TABLE STG_TRANSACTION;
 
-DROP TABLE cards
+DROP TABLE cards;
 
-DROP TABLE PAN
+DROP TABLE PAN;
 
-DROP TABLE users
+DROP TABLE users;
 
-DROP TABLE meta_increment
+DROP TABLE meta_increment;
 
 -- таблицу с юзреами
 CREATE TABLE users
@@ -114,7 +114,7 @@ BEGIN
 		ELSE :NEW.Card_Number := REPLACE (:NEW.Card_Number,SUBSTR(:NEW.Card_Number, 7, 6), 'XXXXXX');
 	END IF;
 	DELETE FROM PAN WHERE CARD_NUMBER_DPAN = :OLD.Card_Number;
-	            DBMS_OUTPUT.put_line(:OLD.Card_Number);
+	DBMS_OUTPUT.put_line(:OLD.Card_Number);
 	INSERT  INTO PAN (CARD_NUMBER_DPAN, CARD_NUMBER_PAN)
 	VALUES (:NEW.Card_Number, default_card_num);
 EXCEPTION
@@ -151,13 +151,15 @@ CREATE TABLE STG_TRANSACTION
 	Merchant_State varchar2(40),
 	ZIP integer,
 	MCC integer,
-	ERR varchar(100))
-
+	ERR varchar(100));
+	--partition by range (TRANSACTION_TIME)
+	--INTERVAL(NUMTOYMINTERVAL (1,'MONTH'))
+	--(PARTITION FIRST VALUES LESS THAN (TO_DATE('2018-01-01 00:00:00', 'YYYY-MM-DD HH24:MI:SS')))
 	
 	
 	
 -- отключение логировния 
-ALTER TABLE STG_TRANSACTION NOLOGGING
+ALTER TABLE STG_TRANSACTION NOLOGGING;
 
 
 
@@ -177,7 +179,7 @@ CREATE TABLE TRANSACTIONS_BAD
 	ZIP integer,
 	MCC integer,
 	ERR varchar(100)
-	)
+	);
 	
 
 -- таблица с "хорошими транзакиями". Автосекционирование по месяцам. PK навешивается уже после того, как данные будут залиты для ускорения.
@@ -209,7 +211,7 @@ CREATE TABLE TRANSACTIONS
 
 
     
-ALTER TABLE TRANSACTIONS NOLOGGING
+ALTER TABLE TRANSACTIONS NOLOGGING;
 
 ALTER SESSION ENABLE PARALLEL DML;
 
@@ -238,19 +240,19 @@ CREATE TABLE TRANSACTION_HIST
 	(PARTITION FIRST VALUES LESS THAN (TO_DATE('2018-01-01 00:00:00', 'YYYY-MM-DD HH24:MI:SS'))
 	);
 	
-ALTER TABLE TRANSACTION_HIST NOLOGGING
+ALTER TABLE TRANSACTION_HIST NOLOGGING;
 
 --Тригер вносит запись в таблицу с историей при апдейте основной таблицы транзакций
 CREATE OR REPLACE TRIGGER TRANSACTION_HIST_UPD BEFORE update ON TRANSACTIONS FOR EACH ROW 
 BEGIN 
 :NEW.UPD_TIME := sysdate;
 	IF :OLD.upd_time IS NULL 
-	THEN 	
-	INSERT INTO TRANSACTION_HIST (operation, TRANSACTION_TIME, Users, CARD, AMOUNT, Use_Chip, Merchant_Name, Merchant_City, Merchant_State, ZIP, MCC, ERR, START_TIME, FINISH_TIME)
-	VALUES ('upd',:OLD.TRANSACTION_TIME, :OLD.Users, :OLD.CARD, :OLD.AMOUNT, :OLD.Use_Chip, :OLD.Merchant_Name, :OLD.Merchant_City, :OLD.Merchant_State, :OLD.ZIP, :OLD.MCC, :OLD.ERR, :OLD.ins_time, sysdate);
-	ELSE 
-	INSERT INTO TRANSACTION_HIST (operation, TRANSACTION_TIME, Users, CARD, AMOUNT, Use_Chip, Merchant_Name, Merchant_City, Merchant_State, ZIP, MCC, ERR, START_TIME, FINISH_TIME)
-	VALUES ('upd',:OLD.TRANSACTION_TIME, :OLD.Users, :OLD.CARD, :OLD.AMOUNT, :OLD.Use_Chip, :OLD.Merchant_Name, :OLD.Merchant_City, :OLD.Merchant_State, :OLD.ZIP, :OLD.MCC, :OLD.ERR, :OLD.upd_time, sysdate);
+		THEN 	
+			INSERT INTO TRANSACTION_HIST (operation, TRANSACTION_TIME, Users, CARD, AMOUNT, Use_Chip, Merchant_Name, Merchant_City, Merchant_State, ZIP, MCC, ERR, START_TIME, FINISH_TIME)
+			VALUES ('upd',:OLD.TRANSACTION_TIME, :OLD.Users, :OLD.CARD, :OLD.AMOUNT, :OLD.Use_Chip, :OLD.Merchant_Name, :OLD.Merchant_City, :OLD.Merchant_State, :OLD.ZIP, :OLD.MCC, :OLD.ERR, :OLD.ins_time, sysdate);
+		ELSE 
+			INSERT INTO TRANSACTION_HIST (operation, TRANSACTION_TIME, Users, CARD, AMOUNT, Use_Chip, Merchant_Name, Merchant_City, Merchant_State, ZIP, MCC, ERR, START_TIME, FINISH_TIME)
+			VALUES ('upd',:OLD.TRANSACTION_TIME, :OLD.Users, :OLD.CARD, :OLD.AMOUNT, :OLD.Use_Chip, :OLD.Merchant_Name, :OLD.Merchant_City, :OLD.Merchant_State, :OLD.ZIP, :OLD.MCC, :OLD.ERR, :OLD.upd_time, sysdate);
 	END IF;
 END;
 	
@@ -258,18 +260,18 @@ END;
 CREATE OR REPLACE TRIGGER TRANSACTION_HIST_DEL BEFORE delete ON TRANSACTIONS FOR EACH ROW 
 BEGIN 
 	IF :OLD.upd_time IS NULL 
-	THEN 	
-	INSERT INTO TRANSACTION_HIST (operation, TRANSACTION_TIME, Users, CARD, AMOUNT, Use_Chip, Merchant_Name, Merchant_City, Merchant_State, ZIP, MCC, ERR, START_TIME, FINISH_TIME)
-	VALUES ('upd',:OLD.TRANSACTION_TIME, :OLD.Users, :OLD.CARD, :OLD.AMOUNT, :OLD.Use_Chip, :OLD.Merchant_Name, :OLD.Merchant_City, :OLD.Merchant_State, :OLD.ZIP, :OLD.MCC, :OLD.ERR, :OLD.ins_time, sysdate);
+		THEN 	
+			INSERT INTO TRANSACTION_HIST (operation, TRANSACTION_TIME, Users, CARD, AMOUNT, Use_Chip, Merchant_Name, Merchant_City, Merchant_State, ZIP, MCC, ERR, START_TIME, FINISH_TIME)
+			VALUES ('upd',:OLD.TRANSACTION_TIME, :OLD.Users, :OLD.CARD, :OLD.AMOUNT, :OLD.Use_Chip, :OLD.Merchant_Name, :OLD.Merchant_City, :OLD.Merchant_State, :OLD.ZIP, :OLD.MCC, :OLD.ERR, :OLD.ins_time, sysdate);
 	ELSE 
-	INSERT INTO TRANSACTION_HIST (operation, TRANSACTION_TIME, Users, CARD, AMOUNT, Use_Chip, Merchant_Name, Merchant_City, Merchant_State, ZIP, MCC, ERR, START_TIME, FINISH_TIME)
-	VALUES ('upd',:OLD.TRANSACTION_TIME, :OLD.Users, :OLD.CARD, :OLD.AMOUNT, :OLD.Use_Chip, :OLD.Merchant_Name, :OLD.Merchant_City, :OLD.Merchant_State, :OLD.ZIP, :OLD.MCC, :OLD.ERR, :OLD.upd_time, sysdate);
+			INSERT INTO TRANSACTION_HIST (operation, TRANSACTION_TIME, Users, CARD, AMOUNT, Use_Chip, Merchant_Name, Merchant_City, Merchant_State, ZIP, MCC, ERR, START_TIME, FINISH_TIME)
+			VALUES ('upd',:OLD.TRANSACTION_TIME, :OLD.Users, :OLD.CARD, :OLD.AMOUNT, :OLD.Use_Chip, :OLD.Merchant_Name, :OLD.Merchant_City, :OLD.Merchant_State, :OLD.ZIP, :OLD.MCC, :OLD.ERR, :OLD.upd_time, sysdate);
 	END IF;
 END;
 
 -- таблица будет содерджать последнюю дату транзакции из  основной таблицы TRANSACTIONS
 create table meta_increment
 (max_date date
-)
+);
 
 
